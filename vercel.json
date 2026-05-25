@@ -1,0 +1,10 @@
+{
+  "rewrites": [
+    { "source": "/",            "destination": "/index.html" },
+    { "source": "/search",      "destination": "/search.html" },
+    { "source": "/connexion",   "destination": "/connexion.html" },
+    { "source": "/profil",      "destination": "/profil.html" },
+    { "source": "/publier",     "destination": "/publier.html" },
+    { "source": "/listings/:id","destination": "/listings/detail.html" }
+  ]
+}

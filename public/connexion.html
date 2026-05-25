@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Se connecter — achetersanscom</title>
+</head>
+<body>
+
+  <header>
+    <nav>
+      <a href="/"><strong>achetersanscom</strong></a>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Se connecter</h1>
+
+    <!-- État 1 — saisie email -->
+    <div id="step-email">
+      <p>Saisissez votre email. Vous recevrez un lien de connexion. Pas de mot de passe.</p>
+      <form id="form-email" action="/api/auth/magic-link" method="post">
+        <div>
+          <label for="email">Adresse email</label><br>
+          <input type="email" id="email" name="email" required autofocus
+                 placeholder="vous@exemple.fr"
+                 autocomplete="email">
+        </div>
+        <div>
+          <button type="submit">Recevoir le lien de connexion</button>
+        </div>
+        <p><small>Pas encore de compte ? Il sera créé automatiquement.</small></p>
+      </form>
+    </div>
+
+    <!-- État 2 — email envoyé (masqué par défaut) -->
+    <div id="step-sent" hidden>
+      <p>Un lien de connexion a été envoyé à <strong id="email-display"></strong></p>
+      <p><small>Lien valable 15 minutes. Vérifiez vos spams.</small></p>
+      <div>
+        <button type="button" id="btn-resend">Renvoyer le lien</button>
+        <button type="button" id="btn-back">Utiliser une autre adresse</button>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <p>achetersanscom &copy; 2026</p>
+  </footer>
+
+  <script>
+    const formEmail   = document.getElementById('form-email')
+    const stepEmail   = document.getElementById('step-email')
+    const stepSent    = document.getElementById('step-sent')
+    const emailDisplay = document.getElementById('email-display')
+    const btnResend   = document.getElementById('btn-resend')
+    const btnBack     = document.getElementById('btn-back')
+
+    formEmail.addEventListener('submit', async e => {
+      e.preventDefault()
+      const email = document.getElementById('email').value
+      const res = await fetch('/api/auth/magic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+      if (res.ok) {
+        emailDisplay.textContent = email
+        stepEmail.hidden = true
+        stepSent.hidden  = false
+      }
+    })
+
+    btnBack.addEventListener('click', () => {
+      stepSent.hidden  = true
+      stepEmail.hidden = false
+      document.getElementById('email').value = ''
+      document.getElementById('email').focus()
+    })
+
+    btnResend.addEventListener('click', async () => {
+      const email = emailDisplay.textContent
+      await fetch('/api/auth/magic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      })
+      btnResend.textContent = 'Lien renvoyé ✓'
+      btnResend.disabled = true
+      setTimeout(() => {
+        btnResend.textContent = 'Renvoyer le lien'
+        btnResend.disabled = false
+      }, 5000)
+    })
+  </script>
+
+</body>
+</html>

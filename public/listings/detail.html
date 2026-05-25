@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appartement 3 pièces · Lyon 3e — achetersanscom</title>
+</head>
+<body>
+
+  <header>
+    <nav>
+      <a href="/"><strong>achetersanscom</strong></a>
+      <ul>
+        <li><a href="/search">Rechercher</a></li>
+        <li><a href="/connexion">Se connecter</a></li>
+        <li><a href="/publier">Publier un bien</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+
+    <nav aria-label="Fil d'ariane">
+      <ol>
+        <li><a href="/">Accueil</a></li>
+        <li><a href="/search">Recherche</a></li>
+        <li>Appartement 3 pièces · Lyon 3e</li>
+      </ol>
+    </nav>
+
+    <article>
+
+      <!-- ── Photos ── -->
+      <section aria-label="Photos">
+        <figure>
+          <img src="/photos/abc123-1.jpg" alt="Salon de l'appartement">
+          <figcaption>Photo 1 / 5</figcaption>
+        </figure>
+      </section>
+
+      <!-- ── En-tête ── -->
+      <header>
+        <h1>Appartement 3 pièces · Lyon 3e</h1>
+        <p><strong>320 000 €</strong></p>
+        <p>Vendu par un particulier · <time datetime="2026-05-18">publié le 18 mai 2026</time></p>
+        <address>Lyon 3e · position approximative</address>
+      </header>
+
+      <!-- ── Caractéristiques ── -->
+      <section>
+        <h2>Caractéristiques</h2>
+        <dl>
+          <dt>Type</dt><dd>Appartement</dd>
+          <dt>Surface habitable</dt><dd>68 m²</dd>
+          <dt>Nombre de pièces</dt><dd>3</dd>
+          <dt>Nombre de chambres</dt><dd>2</dd>
+          <dt>Salles de bain</dt><dd>1</dd>
+          <dt>Étage</dt><dd>2e / 6</dd>
+          <dt>Année de construction</dt><dd>1987</dd>
+          <dt>État général</dt><dd>Bon état</dd>
+          <dt>Chauffage</dt><dd>Collectif gaz</dd>
+        </dl>
+      </section>
+
+      <!-- ── Équipements ── -->
+      <section>
+        <h2>Équipements</h2>
+        <ul>
+          <li>Balcon / Terrasse</li>
+          <li>Cave</li>
+          <li>Parking box fermé</li>
+        </ul>
+      </section>
+
+      <!-- ── DPE ── -->
+      <section>
+        <h2>Diagnostic énergétique</h2>
+        <dl>
+          <dt>DPE — consommation énergétique</dt><dd>B</dd>
+          <dt>GES — émissions carbone</dt><dd>C</dd>
+        </dl>
+      </section>
+
+      <!-- ── Description ── -->
+      <section>
+        <h2>Description</h2>
+        <p>Bel appartement traversant au 2e étage d'un immeuble des années 80 bien entretenu. Séjour lumineux donnant sur un balcon filant, cuisine séparée équipée, deux chambres avec rangements. Cave et box fermé inclus dans le prix. Quartier Montchat, à 5 minutes à pied du métro D.</p>
+      </section>
+
+      <!-- ── Carte ── -->
+      <section>
+        <h2>Localisation approximative</h2>
+        <p><small>L'adresse exacte sera communiquée après mise en relation.</small></p>
+        <div id="map" style="width:100%;height:300px;border:1px solid;"></div>
+      </section>
+
+      <!-- ── Contact ── -->
+      <section>
+        <h2>Contacter le vendeur</h2>
+
+        <!-- État initial -->
+        <div id="contact-init">
+          <button type="button" id="btn-contact">Je suis intéressé</button>
+        </div>
+
+        <!-- Formulaire de contact (masqué par défaut) -->
+        <form id="contact-form" action="/api/contact" method="post" hidden>
+          <div>
+            <label for="message">Votre message</label><br>
+            <textarea id="message" name="message" rows="5" required
+                      placeholder="Bonjour, je suis intéressé par ce bien..."></textarea>
+          </div>
+          <input type="hidden" name="listing_id" value="abc123">
+          <div>
+            <button type="submit">Envoyer ma demande</button>
+            <button type="button" id="btn-cancel">Annuler</button>
+          </div>
+        </form>
+
+        <!-- Confirmation (masquée par défaut) -->
+        <div id="contact-confirm" hidden>
+          <p>Votre demande a bien été transmise. Nous vous contacterons pour organiser la visite.</p>
+        </div>
+
+        <p><small>Votre message nous est transmis. Nous organisons la mise en relation manuellement.</small></p>
+      </section>
+
+    </article>
+
+  </main>
+
+  <footer>
+    <p>achetersanscom &copy; 2026</p>
+  </footer>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    // ── Carte floue ──
+    const map = L.map('map', {
+      dragging: false,
+      scrollWheelZoom: false,
+      doubleClickZoom: false,
+      zoomControl: false
+    }).setView([45.757, 4.842], 15)
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap'
+    }).addTo(map)
+
+    L.circle([45.757, 4.842], {
+      radius: 250,
+      color: '#000',
+      fillColor: '#000',
+      fillOpacity: 0.1
+    }).addTo(map)
+
+    // ── Contact ──
+    const btnContact = document.getElementById('btn-contact')
+    const btnCancel  = document.getElementById('btn-cancel')
+    const contactInit   = document.getElementById('contact-init')
+    const contactForm   = document.getElementById('contact-form')
+    const contactConfirm = document.getElementById('contact-confirm')
+
+    btnContact.addEventListener('click', () => {
+      // Si non connecté → rediriger vers connexion
+      const isConnected = false // remplacer par vérification session
+      if (!isConnected) {
+        window.location.href = '/connexion?next=/listings/abc123'
+        return
+      }
+      contactInit.hidden = true
+      contactForm.hidden = false
+    })
+
+    btnCancel.addEventListener('click', () => {
+      contactForm.hidden = true
+      contactInit.hidden = false
+    })
+
+    contactForm.addEventListener('submit', async e => {
+      e.preventDefault()
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          listing_id: 'abc123',
+          message: document.getElementById('message').value
+        })
+      })
+      if (res.ok) {
+        contactForm.hidden   = true
+        contactConfirm.hidden = false
+      }
+    })
+  </script>
+
+</body>
+</html>

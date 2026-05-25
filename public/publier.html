@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Publier un bien — achetersanscom</title>
+</head>
+<body>
+
+  <header>
+    <nav>
+      <a href="/"><strong>achetersanscom</strong></a>
+      <ul>
+        <li><a href="/search">Rechercher</a></li>
+        <li><a href="/profil">Mon profil</a></li>
+        <li><a href="/publier" aria-current="page">Publier un bien</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <h1>Publier un bien</h1>
+
+    <form action="/api/listings" method="post" enctype="multipart/form-data">
+
+      <!-- ── Type de bien ── -->
+      <fieldset>
+        <legend>Type de bien</legend>
+        <div>
+          <label>
+            <input type="radio" name="property_type" value="appartement" required checked>
+            Appartement
+          </label>
+        </div>
+        <div>
+          <label>
+            <input type="radio" name="property_type" value="maison">
+            Maison
+          </label>
+        </div>
+      </fieldset>
+
+      <!-- ── Localisation ── -->
+      <fieldset>
+        <legend>Localisation</legend>
+        <p><small>L'adresse exacte ne sera jamais affichée publiquement.</small></p>
+        <div>
+          <label for="address">Adresse complète</label><br>
+          <input type="text" id="address" name="address" required
+                 placeholder="12 rue de la Paix, 69001 Lyon"
+                 autocomplete="street-address">
+        </div>
+      </fieldset>
+
+      <!-- ── Prix ── -->
+      <fieldset>
+        <legend>Prix</legend>
+        <div>
+          <label for="price">Prix de vente (€)</label><br>
+          <input type="number" id="price" name="price" required
+                 min="0" step="1000" placeholder="320000">
+        </div>
+      </fieldset>
+
+      <!-- ── Surfaces ── -->
+      <fieldset>
+        <legend>Surfaces</legend>
+        <div>
+          <label for="surface">Surface habitable (m²)</label><br>
+          <input type="number" id="surface" name="surface" required
+                 min="1" step="1" placeholder="68">
+        </div>
+        <div id="field-land-surface" hidden>
+          <label for="land_surface">Surface du terrain (m²)</label><br>
+          <input type="number" id="land_surface" name="land_surface"
+                 min="1" step="1" placeholder="200">
+        </div>
+      </fieldset>
+
+      <!-- ── Pièces ── -->
+      <fieldset>
+        <legend>Pièces</legend>
+        <div>
+          <label for="rooms">Nombre de pièces</label><br>
+          <input type="number" id="rooms" name="rooms" required min="1" max="20" placeholder="3">
+        </div>
+        <div>
+          <label for="bedrooms">Nombre de chambres</label><br>
+          <input type="number" id="bedrooms" name="bedrooms" required min="0" max="20" placeholder="2">
+        </div>
+        <div>
+          <label for="bathrooms">Nombre de salles de bain</label><br>
+          <input type="number" id="bathrooms" name="bathrooms" required min="1" max="10" placeholder="1">
+        </div>
+        <div id="field-floor">
+          <label for="floor">Étage</label><br>
+          <input type="number" id="floor" name="floor" min="0" max="100" placeholder="2">
+        </div>
+        <div id="field-total-floors">
+          <label for="total_floors">Nombre d'étages (immeuble)</label><br>
+          <input type="number" id="total_floors" name="total_floors" min="1" max="100" placeholder="6">
+        </div>
+      </fieldset>
+
+      <!-- ── Énergie ── -->
+      <fieldset>
+        <legend>Diagnostic énergétique</legend>
+        <div>
+          <label for="dpe">DPE — consommation énergétique</label><br>
+          <select id="dpe" name="dpe" required>
+            <option value="">Choisir</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+            <option value="G">G</option>
+          </select>
+        </div>
+        <div>
+          <label for="ges">GES — émissions de gaz à effet de serre</label><br>
+          <select id="ges" name="ges" required>
+            <option value="">Choisir</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+            <option value="E">E</option>
+            <option value="F">F</option>
+            <option value="G">G</option>
+          </select>
+        </div>
+        <div>
+          <label for="heating_type">Type de chauffage</label><br>
+          <select id="heating_type" name="heating_type" required>
+            <option value="">Choisir</option>
+            <option value="gaz">Gaz</option>
+            <option value="electrique">Électrique</option>
+            <option value="fioul">Fioul</option>
+            <option value="pac">Pompe à chaleur</option>
+            <option value="poele">Poêle</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <div id="field-heating-mode">
+          <label for="heating_mode">Collectif ou individuel</label><br>
+          <select id="heating_mode" name="heating_mode">
+            <option value="">Choisir</option>
+            <option value="collectif">Collectif</option>
+            <option value="individuel">Individuel</option>
+          </select>
+        </div>
+      </fieldset>
+
+      <!-- ── Caractéristiques ── -->
+      <fieldset>
+        <legend>Caractéristiques</legend>
+        <div>
+          <label for="year_built">Année de construction</label><br>
+          <input type="number" id="year_built" name="year_built"
+                 min="1800" max="2026" placeholder="1987">
+        </div>
+        <div>
+          <label for="condition">État général</label><br>
+          <select id="condition" name="condition" required>
+            <option value="">Choisir</option>
+            <option value="neuf">Neuf</option>
+            <option value="tres_bon_etat">Très bon état</option>
+            <option value="bon_etat">Bon état</option>
+            <option value="a_rafraichir">À rafraîchir</option>
+            <option value="a_renover">À rénover</option>
+          </select>
+        </div>
+      </fieldset>
+
+      <!-- ── Équipements ── -->
+      <fieldset>
+        <legend>Équipements</legend>
+        <div id="field-balcony">
+          <label>
+            <input type="checkbox" name="has_balcony" value="true">
+            Balcon / Terrasse
+          </label>
+        </div>
+        <div id="field-cave">
+          <label>
+            <input type="checkbox" name="has_cave" value="true">
+            Cave
+          </label>
+        </div>
+        <div id="field-parking">
+          <label for="parking">Parking / Garage</label><br>
+          <select id="parking" name="parking">
+            <option value="aucun">Aucun</option>
+            <option value="box_ferme">Box fermé</option>
+            <option value="couvert">Couvert</option>
+            <option value="exterieur">Extérieur</option>
+          </select>
+        </div>
+        <div id="field-elevator">
+          <label>
+            <input type="checkbox" name="has_elevator" value="true">
+            Ascenseur
+          </label>
+        </div>
+        <div id="field-garden" hidden>
+          <label>
+            <input type="checkbox" name="has_garden" value="true">
+            Jardin
+          </label>
+        </div>
+      </fieldset>
+
+      <!-- ── Photos ── -->
+      <fieldset>
+        <legend>Photos</legend>
+        <p><small>Minimum 1 photo, maximum 20. JPG ou PNG, 5 Mo max par photo.</small></p>
+        <div>
+          <label for="photos">Ajouter des photos</label><br>
+          <input type="file" id="photos" name="photos"
+                 accept="image/jpeg,image/png"
+                 multiple required>
+        </div>
+      </fieldset>
+
+      <!-- ── Description ── -->
+      <fieldset>
+        <legend>Description</legend>
+        <div>
+          <label for="description">Décrivez votre bien</label><br>
+          <textarea id="description" name="description"
+                    rows="6" maxlength="3000" required
+                    placeholder="Bel appartement traversant au 2e étage..."></textarea><br>
+          <small><span id="char-count">0</span> / 3000 caractères</small>
+        </div>
+      </fieldset>
+
+      <div>
+        <button type="submit">Publier l'annonce</button>
+      </div>
+
+    </form>
+  </main>
+
+  <footer>
+    <p>achetersanscom &copy; 2026</p>
+  </footer>
+
+  <script>
+    // Compteur de caractères
+    const desc  = document.getElementById('description')
+    const count = document.getElementById('char-count')
+    desc.addEventListener('input', () => count.textContent = desc.value.length)
+
+    // Champs conditionnels selon type de bien
+    const apptFields = [
+      'field-floor',
+      'field-total-floors',
+      'field-heating-mode',
+      'field-balcony',
+      'field-cave',
+      'field-parking',
+      'field-elevator',
+    ]
+    const maisonFields = [
+      'field-land-surface',
+      'field-garden',
+    ]
+
+    function updateFields() {
+      const isMaison = document.querySelector('[name="property_type"]:checked').value === 'maison'
+      apptFields.forEach(id => document.getElementById(id).hidden  =  isMaison)
+      maisonFields.forEach(id => document.getElementById(id).hidden = !isMaison)
+    }
+
+    document.querySelectorAll('[name="property_type"]')
+      .forEach(r => r.addEventListener('change', updateFields))
+
+    // État initial
+    updateFields()
+  </script>
+
+</body>
+</html>
