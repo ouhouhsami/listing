@@ -221,12 +221,9 @@
     const params = new URLSearchParams(window.location.search)
 
     async function loadResults() {
-      const apiParams = new URLSearchParams()
-      for (const [key, val] of params.entries()) {
-        if (val) apiParams.set(key, val)
-      }
+      if (!params.toString()) return
 
-      const res = await fetch('/api/listings?' + apiParams.toString())
+      const res = await fetch('/api/listings?' + params.toString())
       const listings = await res.json()
 
       const count = document.getElementById('results-count')
