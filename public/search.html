@@ -140,7 +140,7 @@
     </form>
 
     <!-- ── Résultats ── -->
-    <section id="results" aria-live="polite">
+    <section id="results" aria-live="polite" hidden>
       <h2>Résultats <span id="results-count"></span></h2>
 
       <div>
@@ -217,18 +217,68 @@
       window.location.href = '/connexion?next=/search&save=1'
     })
 
-    // ── Chargement des résultats ──
+    // ── Restauration des champs depuis les params URL ──
     const params = new URLSearchParams(window.location.search)
 
+    function restoreForm() {
+      if (!params.toString()) return
+
+      // Type de bien
+      const type = params.get('type')
+      if (type) {
+        const radio = document.querySelector(`[name="type"][value="${type}"]`)
+        if (radio) {
+          radio.checked = true
+          const isMaison = type === 'maison'
+          document.getElementById('equip-appt').hidden  =  isMaison
+          document.getElementById('equip-maison').hidden = !isMaison
+        }
+      }
+
+      // Champs numériques et selects
+      ;['price_max', 'surface_min', 'rooms_min', 'bedrooms_min'].forEach(name => {
+        const val = params.get(name)
+        const el  = document.getElementById(name)
+        if (val && el) el.value = val
+      })
+
+      // Cases à cocher
+      ;['has_balcony', 'has_parking', 'has_elevator', 'has_garden'].forEach(name => {
+        if (params.get(name) === 'true') {
+          const el = document.querySelector(`[name="${name}"]`)
+          if (el) el.checked = true
+        }
+      })
+
+      // Zone dessinée
+      const zone = params.get('zone')
+      if (zone) {
+        try {
+          const geojson = JSON.parse(zone)
+          const layer = L.geoJSON(geojson)
+          drawnItems.addLayer(layer.getLayers()[0])
+          zoneInput.value = zone
+          map.fitBounds(layer.getBounds())
+          btnDraw.hidden  = true
+          btnClear.hidden = false
+        } catch {}
+      }
+    }
+
+    restoreForm()
+
+    // ── Chargement des résultats ──
     async function loadResults() {
       if (!params.toString()) return
 
       const res = await fetch('/api/listings?' + params.toString())
       const listings = await res.json()
 
-      const count = document.getElementById('results-count')
-      const list  = document.getElementById('results-list')
+      const section = document.getElementById('results')
+      const count   = document.getElementById('results-count')
+      const list    = document.getElementById('results-list')
 
+      section.hidden = false
       count.textContent = `(${listings.length} bien${listings.length > 1 ? 's' : ''})`
 
       if (!listings.length) {
