@@ -22,13 +22,11 @@
     <h1>Mon profil</h1>
 
     <p>
-      <strong>jean.dupont@gmail.com</strong><br>
-      <small>Membre depuis mai 2026</small>
+      <strong id="user-email"></strong><br>
+      <small id="user-since"></small>
     </p>
     <div>
-      <form action="/api/auth/logout" method="post">
-        <button type="submit">Se déconnecter</button>
-      </form>
+      <button type="button" id="btn-logout">Se déconnecter</button>
     </div>
 
     <!-- ── Mes annonces ── -->
@@ -147,6 +145,26 @@
   <footer>
     <p>listing &copy; 2026</p>
   </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    window._authReady.then(({ sb, session }) => {
+      if (!session) {
+        window.location.href = '/connexion?next=/profil'
+        return
+      }
+      document.getElementById('user-email').textContent = session.user.email
+      const since = new Date(session.user.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+      document.getElementById('user-since').textContent = `Membre depuis ${since}`
+    })
+
+    document.getElementById('btn-logout').addEventListener('click', async () => {
+      const { sb } = await window._authReady
+      await sb.auth.signOut()
+      window.location.href = '/'
+    })
+  </script>
 
 </body>
 </html>

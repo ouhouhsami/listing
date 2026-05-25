@@ -12,7 +12,7 @@
       <a href="/"><strong>listing</strong></a>
       <ul>
         <li><a href="/search" aria-current="page">Rechercher</a></li>
-        <li><a href="/connexion">Se connecter</a></li>
+        <li data-nav-auth><a href="/connexion">Se connecter</a></li>
         <li><a href="/publier">Publier un bien</a></li>
       </ul>
     </nav>
@@ -156,6 +156,8 @@
     <p>listing &copy; 2026</p>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/auth.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>

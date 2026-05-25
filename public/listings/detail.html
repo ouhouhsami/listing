@@ -12,7 +12,7 @@
       <a href="/"><strong>listing</strong></a>
       <ul>
         <li><a href="/search">Rechercher</a></li>
-        <li><a href="/connexion">Se connecter</a></li>
+        <li data-nav-auth><a href="/connexion">Se connecter</a></li>
         <li><a href="/publier">Publier un bien</a></li>
       </ul>
     </nav>
@@ -135,8 +135,12 @@
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/auth.js"></script>
 
   <script>
+    const listingId = window.location.pathname.split('/').pop()
+
     // ── Carte floue ──
     const map = L.map('map', {
       dragging: false,
@@ -157,17 +161,16 @@
     }).addTo(map)
 
     // ── Contact ──
-    const btnContact = document.getElementById('btn-contact')
-    const btnCancel  = document.getElementById('btn-cancel')
-    const contactInit   = document.getElementById('contact-init')
-    const contactForm   = document.getElementById('contact-form')
+    const btnContact     = document.getElementById('btn-contact')
+    const btnCancel      = document.getElementById('btn-cancel')
+    const contactInit    = document.getElementById('contact-init')
+    const contactForm    = document.getElementById('contact-form')
     const contactConfirm = document.getElementById('contact-confirm')
 
-    btnContact.addEventListener('click', () => {
-      // Si non connecté → rediriger vers connexion
-      const isConnected = false // remplacer par vérification session
-      if (!isConnected) {
-        window.location.href = '/connexion?next=/listings/abc123'
+    btnContact.addEventListener('click', async () => {
+      const { session } = await window._authReady
+      if (!session) {
+        window.location.href = `/connexion?next=/listings/${listingId}`
         return
       }
       contactInit.hidden = true
@@ -181,16 +184,20 @@
 
     contactForm.addEventListener('submit', async e => {
       e.preventDefault()
+      const { session } = await window._authReady
       const res = await fetch('/api/contact', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
         body: JSON.stringify({
-          listing_id: 'abc123',
-          message: document.getElementById('message').value
-        })
+          listing_id: listingId,
+          message: document.getElementById('message').value,
+        }),
       })
       if (res.ok) {
-        contactForm.hidden   = true
+        contactForm.hidden    = true
         contactConfirm.hidden = false
       }
     })

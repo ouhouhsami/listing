@@ -247,6 +247,8 @@
     <p>listing &copy; 2026</p>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/auth.js"></script>
   <script>
     // Compteur de caractères
     const desc  = document.getElementById('description')
@@ -279,7 +281,50 @@
 
     // État initial
     updateFields()
+
+    // Auth : redirect si non connecté
+    window._authReady.then(({ session }) => {
+      if (!session) window.location.href = '/connexion?next=/publier'
+    })
+
+    // Soumission avec Bearer token
+    document.querySelector('form').addEventListener('submit', async e => {
+      e.preventDefault()
+      const { session } = await window._authReady
+      if (!session) return
+
+      const formData = new FormData(e.target)
+      const body = {}
+      for (const [key, val] of formData.entries()) {
+        if (val instanceof File) continue
+        body[key] = val
+      }
+
+      const btn = e.target.querySelector('[type="submit"]')
+      btn.disabled = true
+      btn.textContent = 'Publication en cours…'
+
+      const res = await fetch('/api/listings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify(body),
+      })
+
+      if (res.ok) {
+        const listing = await res.json()
+        window.location.href = `/listings/${listing.id}`
+      } else {
+        const err = await res.json()
+        alert(err.error || 'Erreur lors de la publication')
+        btn.disabled = false
+        btn.textContent = "Publier l'annonce"
+      }
+    })
   </script>
+
 
 </body>
 </html>
