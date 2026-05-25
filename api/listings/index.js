@@ -5,7 +5,7 @@ export default async function handler(req, res) {
   // GET /api/listings — liste des annonces (recherche ou dernières)
   if (req.method === 'GET') {
     const { type, price_max, surface_min, rooms_min, bedrooms_min,
-            has_balcony, has_parking, has_elevator, has_garden, zone } = req.query
+            has_balcony, has_parking, has_elevator, has_garden, zone, limit } = req.query
 
     let query = supabase
       .from('listings')
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     if (has_elevator === 'true') query = query.eq('has_elevator', true)
     if (has_garden === 'true')   query = query.eq('has_garden', true)
 
-    const { data, error } = await query.limit(50)
+    const { data, error } = await query.limit(Math.min(parseInt(limit) || 50, 50))
     if (error) return res.status(500).json({ error: error.message })
 
     // Filtrage par zone GeoJSON si présent

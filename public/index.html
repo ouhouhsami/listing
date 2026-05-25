@@ -20,64 +20,42 @@
 
   <main>
     <h1>Dernières annonces</h1>
-
-    <ul>
-
-      <li>
-        <article>
-          <a href="/listings/abc123">
-            <h2>Appartement 3 pièces · Lyon 3e</h2>
-            <dl>
-              <dt>Prix</dt><dd>320 000 €</dd>
-              <dt>Surface</dt><dd>68 m²</dd>
-              <dt>Pièces</dt><dd>3</dd>
-              <dt>DPE</dt><dd>B</dd>
-              <dt>Ville</dt><dd>Lyon 3e</dd>
-            </dl>
-            <time datetime="2026-05-18">Publié le 18 mai 2026</time>
-          </a>
-        </article>
-      </li>
-
-      <li>
-        <article>
-          <a href="/listings/def456">
-            <h2>Maison 5 pièces · Villeurbanne</h2>
-            <dl>
-              <dt>Prix</dt><dd>450 000 €</dd>
-              <dt>Surface</dt><dd>120 m²</dd>
-              <dt>Pièces</dt><dd>5</dd>
-              <dt>DPE</dt><dd>C</dd>
-              <dt>Ville</dt><dd>Villeurbanne</dd>
-            </dl>
-            <time datetime="2026-05-17">Publié le 17 mai 2026</time>
-          </a>
-        </article>
-      </li>
-
-      <li>
-        <article>
-          <a href="/listings/ghi789">
-            <h2>Appartement 2 pièces · Lyon 7e</h2>
-            <dl>
-              <dt>Prix</dt><dd>198 000 €</dd>
-              <dt>Surface</dt><dd>45 m²</dd>
-              <dt>Pièces</dt><dd>2</dd>
-              <dt>DPE</dt><dd>D</dd>
-              <dt>Ville</dt><dd>Lyon 7e</dd>
-            </dl>
-            <time datetime="2026-05-16">Publié le 16 mai 2026</time>
-          </a>
-        </article>
-      </li>
-
-    </ul>
-
+    <ul id="listings-list"></ul>
   </main>
 
   <footer>
     <p>listing &copy; 2026</p>
   </footer>
+
+  <script>
+    fetch('/api/listings?limit=15')
+      .then(r => r.json())
+      .then(listings => {
+        const list = document.getElementById('listings-list')
+        if (!listings.length) return
+        list.innerHTML = listings.map(l => `
+          <li>
+            <article>
+              <a href="/listings/${l.id}">
+                <h2>${l.title}</h2>
+                <dl>
+                  <dt>Prix</dt><dd>${l.price.toLocaleString('fr-FR')} €</dd>
+                  <dt>Surface</dt><dd>${l.surface} m²</dd>
+                  <dt>Pièces</dt><dd>${l.rooms}</dd>
+                  <dt>DPE</dt><dd>${l.dpe}</dd>
+                  <dt>Ville</dt><dd>${l.city}</dd>
+                </dl>
+                <time datetime="${l.created_at}">${formatDate(l.created_at)}</time>
+              </a>
+            </article>
+          </li>
+        `).join('')
+      })
+
+    function formatDate(iso) {
+      return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    }
+  </script>
 
 </body>
 </html>
