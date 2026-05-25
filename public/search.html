@@ -259,8 +259,16 @@
           drawnItems.addLayer(layer.getLayers()[0])
           zoneInput.value = zone
           map.fitBounds(layer.getBounds())
+          map.addControl(drawControl)
           btnDraw.hidden  = true
           btnClear.hidden = false
+
+          // Mettre à jour l'input quand le polygone est édité
+          map.on(L.Draw.Event.EDITED, e => {
+            e.layers.eachLayer(l => {
+              zoneInput.value = JSON.stringify(l.toGeoJSON().geometry)
+            })
+          })
         } catch {}
       }
     }
