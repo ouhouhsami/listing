@@ -1,4 +1,4 @@
-# listing — achetersanscom
+# listing — listing
 
 Plateforme immobilière entre particuliers. HTML pur + Vercel Functions + Supabase.
 

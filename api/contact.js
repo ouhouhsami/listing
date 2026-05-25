@@ -31,7 +31,7 @@ export default async function handler(req, res) {
 
   // Envoyer l'email à l'équipe
   await resend.emails.send({
-    from:    'achetersanscom <contact@achetersanscom.fr>',
+    from:    'listing <contact@listing.fr>',
     to:      process.env.CONTACT_EMAIL,
     subject: `Nouvelle demande — ${listing.title}`,
     html: `
