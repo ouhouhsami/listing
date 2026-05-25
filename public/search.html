@@ -141,60 +141,13 @@
 
     <!-- ── Résultats ── -->
     <section id="results" aria-live="polite">
-      <h2>Résultats <span id="results-count">(24 biens)</span></h2>
+      <h2>Résultats <span id="results-count"></span></h2>
 
       <div>
         <button id="btn-save-search">Sauvegarder cette recherche</button>
       </div>
 
-      <ul id="results-list">
-
-        <li>
-          <article>
-            <a href="/listings/abc123">
-              <h3>Appartement 3 pièces · Lyon 3e</h3>
-              <dl>
-                <dt>Prix</dt><dd>320 000 €</dd>
-                <dt>Surface</dt><dd>68 m²</dd>
-                <dt>Pièces</dt><dd>3</dd>
-                <dt>DPE</dt><dd>B</dd>
-                <dt>Ville</dt><dd>Lyon 3e · position approximative</dd>
-              </dl>
-            </a>
-          </article>
-        </li>
-
-        <li>
-          <article>
-            <a href="/listings/def456">
-              <h3>Appartement 4 pièces · Lyon 7e</h3>
-              <dl>
-                <dt>Prix</dt><dd>265 000 €</dd>
-                <dt>Surface</dt><dd>82 m²</dd>
-                <dt>Pièces</dt><dd>4</dd>
-                <dt>DPE</dt><dd>C</dd>
-                <dt>Ville</dt><dd>Lyon 7e · position approximative</dd>
-              </dl>
-            </a>
-          </article>
-        </li>
-
-        <li>
-          <article>
-            <a href="/listings/ghi789">
-              <h3>Appartement 3 pièces · Lyon 6e</h3>
-              <dl>
-                <dt>Prix</dt><dd>389 000 €</dd>
-                <dt>Surface</dt><dd>74 m²</dd>
-                <dt>Pièces</dt><dd>3</dd>
-                <dt>DPE</dt><dd>B</dd>
-                <dt>Ville</dt><dd>Lyon 6e · position approximative</dd>
-              </dl>
-            </a>
-          </article>
-        </li>
-
-      </ul>
+      <ul id="results-list"></ul>
     </section>
 
   </main>
@@ -263,6 +216,48 @@
     document.getElementById('btn-save-search').addEventListener('click', () => {
       window.location.href = '/connexion?next=/search&save=1'
     })
+
+    // ── Chargement des résultats ──
+    const params = new URLSearchParams(window.location.search)
+
+    async function loadResults() {
+      const apiParams = new URLSearchParams()
+      for (const [key, val] of params.entries()) {
+        if (val) apiParams.set(key, val)
+      }
+
+      const res = await fetch('/api/listings?' + apiParams.toString())
+      const listings = await res.json()
+
+      const count = document.getElementById('results-count')
+      const list  = document.getElementById('results-list')
+
+      count.textContent = `(${listings.length} bien${listings.length > 1 ? 's' : ''})`
+
+      if (!listings.length) {
+        list.innerHTML = '<li>Aucun bien ne correspond à votre recherche.</li>'
+        return
+      }
+
+      list.innerHTML = listings.map(l => `
+        <li>
+          <article>
+            <a href="/listings/${l.id}">
+              <h3>${l.title}</h3>
+              <dl>
+                <dt>Prix</dt><dd>${l.price.toLocaleString('fr-FR')} €</dd>
+                <dt>Surface</dt><dd>${l.surface} m²</dd>
+                <dt>Pièces</dt><dd>${l.rooms}</dd>
+                <dt>DPE</dt><dd>${l.dpe}</dd>
+                <dt>Ville</dt><dd>${l.city} · position approximative</dd>
+              </dl>
+            </a>
+          </article>
+        </li>
+      `).join('')
+    }
+
+    loadResults()
   </script>
 
 </body>
