@@ -32,112 +32,14 @@
     <!-- ── Mes annonces ── -->
     <section>
       <h2>Mes annonces</h2>
-      <div>
-        <a href="/publier">Publier un nouveau bien</a>
-      </div>
-
-      <ul>
-
-        <li>
-          <article>
-            <h3><a href="/listings/abc123">Appartement 3 pièces · Lyon 3e</a></h3>
-            <dl>
-              <dt>Prix</dt><dd>320 000 €</dd>
-              <dt>Statut</dt><dd>Actif</dd>
-              <dt>Vues</dt><dd>142</dd>
-              <dt>Demandes</dt><dd>3</dd>
-              <dt>Publié</dt><dd><time datetime="2026-05-18">18 mai 2026</time></dd>
-            </dl>
-            <div>
-              <a href="/publier?id=abc123">Modifier</a>
-              <form action="/api/listings/abc123/sold" method="post" style="display:inline">
-                <button type="submit">Marquer comme vendu</button>
-              </form>
-              <form action="/api/listings/abc123" method="post" style="display:inline">
-                <input type="hidden" name="_method" value="DELETE">
-                <button type="submit">Supprimer</button>
-              </form>
-            </div>
-          </article>
-        </li>
-
-        <li>
-          <article>
-            <h3><a href="/listings/def456">Appartement 2 pièces · Villeurbanne</a></h3>
-            <dl>
-              <dt>Prix</dt><dd>189 000 €</dd>
-              <dt>Statut</dt><dd>Vendu</dd>
-              <dt>Vues</dt><dd>387</dd>
-              <dt>Demandes</dt><dd>11</dd>
-              <dt>Publié</dt><dd><time datetime="2026-04-01">1er avril 2026</time></dd>
-            </dl>
-            <div>
-              <form action="/api/listings/def456" method="post" style="display:inline">
-                <input type="hidden" name="_method" value="DELETE">
-                <button type="submit">Supprimer</button>
-              </form>
-            </div>
-          </article>
-        </li>
-
-      </ul>
+      <div><a href="/publier">Publier un nouveau bien</a></div>
+      <ul id="mes-annonces"><li>Chargement…</li></ul>
     </section>
 
     <!-- ── Mes recherches sauvegardées ── -->
     <section>
       <h2>Mes recherches sauvegardées</h2>
-
-      <ul>
-
-        <li>
-          <article>
-            <h3>Appart · max 400k · 3p+ · 60m²+ · Balcon</h3>
-            <dl>
-              <dt>Zone</dt><dd>Lyon et proche banlieue</dd>
-              <dt>Résultats</dt><dd>24 biens</dd>
-              <dt>Alertes</dt>
-              <dd>
-                <form action="/api/searches/search1/alerts" method="post" style="display:inline">
-                  <input type="hidden" name="enabled" value="false">
-                  <button type="submit">Désactiver les alertes</button>
-                </form>
-              </dd>
-            </dl>
-            <div>
-              <a href="/search?type=appartement&price_max=400000&rooms_min=3&surface_min=60&has_balcony=true">Relancer la recherche</a>
-              <form action="/api/searches/search1" method="post" style="display:inline">
-                <input type="hidden" name="_method" value="DELETE">
-                <button type="submit">Supprimer</button>
-              </form>
-            </div>
-          </article>
-        </li>
-
-        <li>
-          <article>
-            <h3>Maison · max 550k · 4p+ · 100m²+ · Jardin</h3>
-            <dl>
-              <dt>Zone</dt><dd>Sud Lyon</dd>
-              <dt>Résultats</dt><dd>7 biens</dd>
-              <dt>Alertes</dt>
-              <dd>
-                <form action="/api/searches/search2/alerts" method="post" style="display:inline">
-                  <input type="hidden" name="enabled" value="true">
-                  <button type="submit">Activer les alertes</button>
-                </form>
-              </dd>
-            </dl>
-            <div>
-              <a href="/search?type=maison&price_max=550000&rooms_min=4&surface_min=100&has_garden=true">Relancer la recherche</a>
-              <form action="/api/searches/search2" method="post" style="display:inline">
-                <input type="hidden" name="_method" value="DELETE">
-                <button type="submit">Supprimer</button>
-              </form>
-            </div>
-          </article>
-        </li>
-
-      </ul>
+      <ul id="mes-recherches"><li>Chargement…</li></ul>
     </section>
 
   </main>
@@ -150,13 +52,14 @@
   <script src="/js/auth.js"></script>
   <script>
     window._authReady.then(({ sb, session }) => {
-      if (!session) {
-        window.location.href = '/connexion?next=/profil'
-        return
-      }
+      if (!session) { window.location.href = '/connexion?next=/profil'; return }
+
       document.getElementById('user-email').textContent = session.user.email
       const since = new Date(session.user.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
       document.getElementById('user-since').textContent = `Membre depuis ${since}`
+
+      loadListings(sb, session)
+      loadSearches(sb, session)
     })
 
     document.getElementById('btn-logout').addEventListener('click', async () => {
@@ -164,6 +67,127 @@
       await sb.auth.signOut()
       window.location.href = '/'
     })
+
+    // ── Annonces ──────────────────────────────────────────────────────
+
+    async function loadListings(sb, session) {
+      const { data, error } = await sb
+        .from('listings')
+        .select('id, title, price, status, views, created_at')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false })
+
+      const ul = document.getElementById('mes-annonces')
+      if (error || !data?.length) {
+        ul.innerHTML = '<li>Aucune annonce.</li>'
+        return
+      }
+
+      ul.innerHTML = data.map(l => `
+        <li>
+          <article>
+            <h3><a href="/listings/${l.id}">${l.title}</a></h3>
+            <dl>
+              <dt>Prix</dt><dd>${l.price.toLocaleString('fr-FR')} €</dd>
+              <dt>Statut</dt><dd>${l.status}</dd>
+              <dt>Vues</dt><dd>${l.views}</dd>
+              <dt>Publié</dt><dd><time datetime="${l.created_at}">${fmt(l.created_at)}</time></dd>
+            </dl>
+            <div>
+              <a href="/publier?id=${l.id}">Modifier</a>
+              ${l.status === 'actif' ? `<button onclick="markSold('${l.id}', this)">Marquer comme vendu</button>` : ''}
+              <button onclick="deleteListing('${l.id}', this)">Supprimer</button>
+            </div>
+          </article>
+        </li>
+      `).join('')
+    }
+
+    async function markSold(id, btn) {
+      const { sb } = await window._authReady
+      btn.disabled = true
+      await sb.from('listings').update({ status: 'vendu' }).eq('id', id)
+      btn.closest('article').querySelector('dd:nth-of-type(2)').textContent = 'vendu'
+      btn.remove()
+    }
+
+    async function deleteListing(id, btn) {
+      if (!confirm('Supprimer cette annonce ?')) return
+      const { sb } = await window._authReady
+      btn.disabled = true
+      await sb.from('listings').delete().eq('id', id)
+      btn.closest('li').remove()
+    }
+
+    // ── Recherches ────────────────────────────────────────────────────
+
+    async function loadSearches(sb, session) {
+      const { data, error } = await sb
+        .from('saved_searches')
+        .select('*')
+        .eq('user_id', session.user.id)
+        .order('created_at', { ascending: false })
+
+      const ul = document.getElementById('mes-recherches')
+      if (error || !data?.length) {
+        ul.innerHTML = '<li>Aucune recherche sauvegardée.</li>'
+        return
+      }
+
+      ul.innerHTML = data.map(s => `
+        <li>
+          <article>
+            <h3>${s.label || '(sans titre)'}</h3>
+            <dl>
+              <dt>Alertes</dt>
+              <dd><button onclick="toggleAlerts('${s.id}', ${s.alerts_enabled}, this)">
+                ${s.alerts_enabled ? 'Désactiver les alertes' : 'Activer les alertes'}
+              </button></dd>
+            </dl>
+            <div>
+              <a href="/search?${searchParams(s)}">Relancer la recherche</a>
+              <button onclick="deleteSearch('${s.id}', this)">Supprimer</button>
+            </div>
+          </article>
+        </li>
+      `).join('')
+    }
+
+    async function toggleAlerts(id, current, btn) {
+      const { sb } = await window._authReady
+      btn.disabled = true
+      const next = !current
+      await sb.from('saved_searches').update({ alerts_enabled: next }).eq('id', id)
+      btn.textContent = next ? 'Désactiver les alertes' : 'Activer les alertes'
+      btn.onclick = () => toggleAlerts(id, next, btn)
+      btn.disabled = false
+    }
+
+    async function deleteSearch(id, btn) {
+      if (!confirm('Supprimer cette recherche ?')) return
+      const { sb } = await window._authReady
+      btn.disabled = true
+      await sb.from('saved_searches').delete().eq('id', id)
+      btn.closest('li').remove()
+    }
+
+    function searchParams(s) {
+      const p = new URLSearchParams()
+      if (s.property_type) p.set('type', s.property_type)
+      if (s.price_max)     p.set('price_max', s.price_max)
+      if (s.surface_min)   p.set('surface_min', s.surface_min)
+      if (s.rooms_min)     p.set('rooms_min', s.rooms_min)
+      if (s.bedrooms_min)  p.set('bedrooms_min', s.bedrooms_min)
+      if (s.has_balcony)   p.set('has_balcony', 'true')
+      if (s.has_parking)   p.set('has_parking', 'true')
+      if (s.has_elevator)  p.set('has_elevator', 'true')
+      if (s.has_garden)    p.set('has_garden', 'true')
+      return p.toString()
+    }
+
+    function fmt(iso) {
+      return new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+    }
   </script>
 
 </body>
