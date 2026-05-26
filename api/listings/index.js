@@ -2,39 +2,27 @@ import { supabase } from '../../lib/supabase.js'
 
 export default async function handler(req, res) {
 
-  // GET /api/listings — liste des annonces (recherche ou dernières)
+  // GET /api/listings — recherche via fonction SQL
   if (req.method === 'GET') {
     const { type, price_max, surface_min, rooms_min, bedrooms_min,
             has_balcony, has_parking, has_elevator, has_garden, zone, limit } = req.query
 
-    let query = supabase
-      .from('listings')
-      .select('id, title, property_type, price, surface, rooms, bedrooms, dpe, city, created_at')
-      .eq('status', 'actif')
-      .order('created_at', { ascending: false })
+    const { data, error } = await supabase.rpc('search_listings', {
+      p_zone:         zone         ? JSON.parse(zone)          : null,
+      p_type:         type         || null,
+      p_price_max:    price_max    ? parseInt(price_max)       : null,
+      p_surface_min:  surface_min  ? parseFloat(surface_min)   : null,
+      p_rooms_min:    rooms_min    ? parseInt(rooms_min)       : null,
+      p_bedrooms_min: bedrooms_min ? parseInt(bedrooms_min)    : null,
+      p_has_balcony:  has_balcony  === 'true' ? true : null,
+      p_has_parking:  has_parking  === 'true' ? true : null,
+      p_has_elevator: has_elevator === 'true' ? true : null,
+      p_has_garden:   has_garden   === 'true' ? true : null,
+      p_limit:        Math.min(parseInt(limit) || 50, 50),
+    })
 
-    if (type)        query = query.eq('property_type', type)
-    if (price_max)   query = query.lte('price', parseInt(price_max))
-    if (surface_min) query = query.gte('surface', parseFloat(surface_min))
-    if (rooms_min)   query = query.gte('rooms', parseInt(rooms_min))
-    if (bedrooms_min) query = query.gte('bedrooms', parseInt(bedrooms_min))
-    if (has_balcony === 'true')  query = query.eq('has_balcony', true)
-    if (has_elevator === 'true') query = query.eq('has_elevator', true)
-    if (has_garden === 'true')   query = query.eq('has_garden', true)
-
-    const { data, error } = await query.limit(Math.min(parseInt(limit) || 50, 50))
     if (error) return res.status(500).json({ error: error.message })
-
-    // Filtrage par zone GeoJSON si présent
-    let results = data
-    if (zone) {
-      try {
-        const polygon = JSON.parse(zone)
-        results = data.filter(l => isInPolygon(l.lat, l.lng, polygon.coordinates[0]))
-      } catch {}
-    }
-
-    return res.json(results)
+    return res.json(data)
   }
 
   // POST /api/listings — créer une annonce
@@ -42,14 +30,19 @@ export default async function handler(req, res) {
     const { user } = await getUser(req)
     if (!user) return res.status(401).json({ error: 'Non authentifié' })
 
-    const body = req.body
+    // lat/lng/city/postcode viennent de l'autocomplete client (api-adresse.data.gouv.fr)
+    // postcode → postal_code pour correspondre au schéma
+    const { lat, lng, city, postcode, ...body } = req.body
 
-    // Géocodage via API Adresse gouv.fr
-    const geo = await geocode(body.address)
+    let geo
+    if (lat && lng && city && postcode) {
+      geo = { lat: parseFloat(lat), lng: parseFloat(lng), city, postal_code: postcode }
+    } else {
+      geo = await geocode(body.address)
+    }
     if (!geo) return res.status(400).json({ error: 'Adresse non trouvée' })
 
-    // Titre auto
-    const type = body.property_type === 'appartement' ? 'Appartement' : 'Maison'
+    const type  = body.property_type === 'appartement' ? 'Appartement' : 'Maison'
     const title = `${type} ${body.rooms} pièces · ${body.surface} m² · ${geo.city}`
 
     const { data, error } = await supabase.from('listings').insert({
@@ -93,15 +86,4 @@ async function geocode(address) {
       postal_code: f.properties.postcode,
     }
   } catch { return null }
-}
-
-function isInPolygon(lat, lng, coords) {
-  let inside = false
-  for (let i = 0, j = coords.length - 1; i < coords.length; j = i++) {
-    const [xi, yi] = coords[i]
-    const [xj, yj] = coords[j]
-    const intersect = yi > lng !== yj > lng && lat < ((xj - xi) * (lng - yi)) / (yj - yi) + xi
-    if (intersect) inside = !inside
-  }
-  return inside
 }
