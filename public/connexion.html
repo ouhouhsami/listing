@@ -64,15 +64,12 @@
     const errorMsg  = document.getElementById('error-msg')
 
     async function sendMagicLink(email) {
-      const res = await fetch('/api/auth/magic-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
+      const { sb } = await window._authReady
+      const { error } = await sb.auth.signInWithOtp({
+        email,
+        options: { emailRedirectTo: `${window.location.origin}/api/auth/callback` },
       })
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || `Erreur ${res.status}`)
-      }
+      if (error) throw new Error(error.message)
     }
 
     formEmail.addEventListener('submit', async e => {
@@ -104,11 +101,7 @@
 
     btnResend.addEventListener('click', async () => {
       const email = emailDisplay.textContent
-      await fetch('/api/auth/magic-link', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      })
+      await sendMagicLink(email).catch(() => {})
       btnResend.textContent = 'Lien renvoyé ✓'
       btnResend.disabled = true
       setTimeout(() => {
