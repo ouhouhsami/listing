@@ -49,10 +49,27 @@
         <label for="address">
           Adresse complète
           <small>L'adresse exacte ne sera jamais affichée publiquement.</small>
+        </label>
+        <div style="position:relative">
           <input type="text" id="address" name="address" required
                  placeholder="12 rue de la Paix, 69001 Lyon"
-                 autocomplete="street-address">
-        </label>
+                 autocomplete="off"
+                 aria-autocomplete="list"
+                 aria-controls="address-suggestions"
+                 aria-expanded="false"
+                 role="combobox">
+          <ul id="address-suggestions" role="listbox"
+              style="display:none;position:absolute;z-index:100;width:100%;
+                     margin:0;padding:0;list-style:none;
+                     border:1px solid var(--pico-form-element-border-color);
+                     border-top:none;border-radius:0 0 var(--pico-border-radius) var(--pico-border-radius);
+                     background:var(--pico-form-element-background-color);
+                     box-shadow:var(--pico-box-shadow)"></ul>
+        </div>
+        <input type="hidden" id="lat"      name="lat">
+        <input type="hidden" id="lng"      name="lng">
+        <input type="hidden" id="city"     name="city">
+        <input type="hidden" id="postcode" name="postcode">
       </fieldset>
 
       <!-- ── Prix ── -->
@@ -269,6 +286,108 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/auth.js"></script>
   <script>
+    // ── Autocomplete adresse (api-adresse.data.gouv.fr) ──────────────
+    ;(function () {
+      const input   = document.getElementById('address')
+      const list    = document.getElementById('address-suggestions')
+      const latEl   = document.getElementById('lat')
+      const lngEl   = document.getElementById('lng')
+      const cityEl  = document.getElementById('city')
+      const pcEl    = document.getElementById('postcode')
+
+      let debounce  = null
+      let activeIdx = -1
+      let features  = []
+
+      function clearHidden() {
+        latEl.value = lngEl.value = cityEl.value = pcEl.value = ''
+      }
+
+      function closeList() {
+        list.style.display = 'none'
+        list.innerHTML = ''
+        input.setAttribute('aria-expanded', 'false')
+        activeIdx = -1
+        features  = []
+      }
+
+      function renderList(items) {
+        features = items
+        list.innerHTML = items.map((f, i) => {
+          const p = f.properties
+          return `<li role="option" data-idx="${i}"
+                      style="padding:.5rem .75rem;cursor:pointer;border-bottom:1px solid var(--pico-form-element-border-color)"
+                      >${p.label}</li>`
+        }).join('')
+        list.style.display = items.length ? 'block' : 'none'
+        input.setAttribute('aria-expanded', items.length ? 'true' : 'false')
+        activeIdx = -1
+      }
+
+      function selectFeature(idx) {
+        const f = features[idx]
+        if (!f) return
+        const p = f.properties
+        const [lng, lat] = f.geometry.coordinates
+        input.value  = p.label
+        latEl.value  = lat
+        lngEl.value  = lng
+        cityEl.value = p.city
+        pcEl.value   = p.postcode
+        closeList()
+      }
+
+      function setActive(idx) {
+        const items = list.querySelectorAll('li')
+        items.forEach(li => li.removeAttribute('aria-selected'))
+        if (idx >= 0 && idx < items.length) {
+          items[idx].setAttribute('aria-selected', 'true')
+          items[idx].scrollIntoView({ block: 'nearest' })
+        }
+        activeIdx = idx
+      }
+
+      input.addEventListener('input', () => {
+        clearHidden()
+        clearTimeout(debounce)
+        const q = input.value.trim()
+        if (q.length < 3) { closeList(); return }
+        debounce = setTimeout(async () => {
+          const url = `https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&limit=5`
+          const res = await fetch(url).catch(() => null)
+          if (!res?.ok) return
+          const data = await res.json()
+          renderList(data.features || [])
+        }, 250)
+      })
+
+      input.addEventListener('keydown', e => {
+        const items = list.querySelectorAll('li')
+        if (!items.length) return
+        if (e.key === 'ArrowDown') {
+          e.preventDefault()
+          setActive(Math.min(activeIdx + 1, items.length - 1))
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault()
+          setActive(Math.max(activeIdx - 1, 0))
+        } else if (e.key === 'Enter' && activeIdx >= 0) {
+          e.preventDefault()
+          selectFeature(activeIdx)
+        } else if (e.key === 'Escape') {
+          closeList()
+        }
+      })
+
+      list.addEventListener('mousedown', e => {
+        const li = e.target.closest('li[data-idx]')
+        if (li) selectFeature(parseInt(li.dataset.idx))
+      })
+
+      document.addEventListener('click', e => {
+        if (!input.contains(e.target) && !list.contains(e.target)) closeList()
+      })
+    })()
+
     // Compteur de caractères
     const desc  = document.getElementById('description')
     const count = document.getElementById('char-count')
