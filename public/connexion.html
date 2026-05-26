@@ -26,8 +26,9 @@
                  placeholder="vous@exemple.fr"
                  autocomplete="email">
         </div>
+        <p id="error-msg" hidden style="color:red"></p>
         <div>
-          <button type="submit">Recevoir le lien de connexion</button>
+          <button type="submit" id="btn-submit">Recevoir le lien de connexion</button>
         </div>
         <p><small>Pas encore de compte ? Il sera créé automatiquement.</small></p>
       </form>
@@ -59,18 +60,38 @@
     const btnResend   = document.getElementById('btn-resend')
     const btnBack     = document.getElementById('btn-back')
 
-    formEmail.addEventListener('submit', async e => {
-      e.preventDefault()
-      const email = document.getElementById('email').value
+    const btnSubmit = document.getElementById('btn-submit')
+    const errorMsg  = document.getElementById('error-msg')
+
+    async function sendMagicLink(email) {
       const res = await fetch('/api/auth/magic-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email }),
       })
-      if (res.ok) {
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || `Erreur ${res.status}`)
+      }
+    }
+
+    formEmail.addEventListener('submit', async e => {
+      e.preventDefault()
+      const email = document.getElementById('email').value
+      errorMsg.hidden = true
+      btnSubmit.disabled = true
+      btnSubmit.textContent = 'Envoi en cours…'
+      try {
+        await sendMagicLink(email)
         emailDisplay.textContent = email
         stepEmail.hidden = true
         stepSent.hidden  = false
+      } catch (err) {
+        errorMsg.textContent = err.message
+        errorMsg.hidden = false
+      } finally {
+        btnSubmit.disabled = false
+        btnSubmit.textContent = 'Recevoir le lien de connexion'
       }
     })
 
