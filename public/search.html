@@ -169,12 +169,20 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"/>
 
   <script>
-    // ── Type de bien → équipements conditionnels ──
+    // ── Type de bien → équipements conditionnels + réinitialisation ──
     document.querySelectorAll('[name="type"]').forEach(r => {
       r.addEventListener('change', () => {
         const isMaison = r.value === 'maison' && r.checked
         document.getElementById('equip-appt').hidden  =  isMaison
         document.getElementById('equip-maison').hidden = !isMaison
+
+        if (isMaison) {
+          document.querySelector('[name="has_balcony"]').checked  = false
+          document.querySelector('[name="has_parking"]').checked  = false
+          document.querySelector('[name="has_elevator"]').checked = false
+        } else {
+          document.querySelector('[name="has_garden"]').checked = false
+        }
       })
     })
 

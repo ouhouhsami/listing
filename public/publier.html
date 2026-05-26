@@ -393,16 +393,33 @@
       'field-garden',
     ]
 
-    function updateFields() {
+    function updateFields(reset = false) {
       const isMaison = document.querySelector('[name="property_type"]:checked').value === 'maison'
       apptFields.forEach(id => document.getElementById(id).hidden  =  isMaison)
       maisonFields.forEach(id => document.getElementById(id).hidden = !isMaison)
+
+      if (!reset) return
+
+      if (isMaison) {
+        // Réinitialiser les champs appartement
+        document.getElementById('floor').value        = ''
+        document.getElementById('total_floors').value = ''
+        document.querySelectorAll('[name="heating_mode"]').forEach(r => r.checked = false)
+        document.querySelector('[name="has_balcony"]').checked  = false
+        document.querySelector('[name="has_cave"]').checked     = false
+        document.querySelector('[name="parking"][value="aucun"]').checked = true
+        document.querySelector('[name="has_elevator"]').checked = false
+      } else {
+        // Réinitialiser les champs maison
+        document.getElementById('land_surface').value = ''
+        document.querySelector('[name="has_garden"]').checked = false
+      }
     }
 
     document.querySelectorAll('[name="property_type"]')
-      .forEach(r => r.addEventListener('change', updateFields))
+      .forEach(r => r.addEventListener('change', () => updateFields(true)))
 
-    // État initial
+    // État initial (sans reset)
     updateFields()
 
     // Auth : redirect si non connecté
