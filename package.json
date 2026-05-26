@@ -2,6 +2,7 @@
   "name": "listing",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "dependencies": {
     "@supabase/supabase-js": "^2.43.4",
     "resend": "^3.2.0"
