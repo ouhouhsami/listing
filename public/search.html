@@ -152,7 +152,7 @@
         <button id="btn-save-search">Sauvegarder cette recherche</button>
       </div>
 
-      <ul id="results-list"></ul>
+      <div id="results-list" class="grid"></div>
     </section>
 
   </main>
@@ -344,20 +344,21 @@
       }
 
       list.innerHTML = listings.map(l => `
-        <li>
-          <article>
-            <a href="/listings/${l.id}">
-              <h3>${l.title}</h3>
-              <dl>
-                <dt>Prix</dt><dd>${l.price.toLocaleString('fr-FR')} €</dd>
-                <dt>Surface</dt><dd>${l.surface} m²</dd>
-                <dt>Pièces</dt><dd>${l.rooms}</dd>
-                <dt>DPE</dt><dd>${l.dpe}</dd>
-                <dt>Ville</dt><dd>${l.city} · position approximative</dd>
-              </dl>
-            </a>
-          </article>
-        </li>
+        <article>
+          <header>
+            <strong>${l.price.toLocaleString('fr-FR')} €</strong>
+            <span> · ${l.city}</span>
+          </header>
+          <h3><a href="/listings/${l.id}">${l.title}</a></h3>
+          <dl>
+            <dt>Surface</dt><dd>${l.surface} m²</dd>
+            <dt>Pièces</dt><dd>${l.rooms}</dd>
+            <dt>DPE</dt><dd>${l.dpe}</dd>
+          </dl>
+          <footer>
+            <a href="/listings/${l.id}">Voir l'annonce →</a>
+          </footer>
+        </article>
       `).join('')
     }
 

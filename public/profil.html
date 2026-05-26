@@ -36,13 +36,13 @@
     <section>
       <h2>Mes annonces</h2>
       <div><a href="/publier">Publier un nouveau bien</a></div>
-      <ul id="mes-annonces"><li>Chargement…</li></ul>
+      <div id="mes-annonces" class="grid"><p>Chargement…</p></div>
     </section>
 
     <!-- ── Mes recherches sauvegardées ── -->
     <section>
       <h2>Mes recherches sauvegardées</h2>
-      <ul id="mes-recherches"><li>Chargement…</li></ul>
+      <div id="mes-recherches" class="grid"><p>Chargement…</p></div>
     </section>
 
   </main>
@@ -80,29 +80,28 @@
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: false })
 
-      const ul = document.getElementById('mes-annonces')
+      const grid = document.getElementById('mes-annonces')
       if (error || !data?.length) {
-        ul.innerHTML = '<li>Aucune annonce.</li>'
+        grid.innerHTML = '<p>Aucune annonce.</p>'
         return
       }
 
-      ul.innerHTML = data.map(l => `
-        <li>
-          <article>
+      grid.innerHTML = data.map(l => `
+        <article>
+          <header>
             <h3><a href="/listings/${l.id}">${l.title}</a></h3>
-            <dl>
-              <dt>Prix</dt><dd>${l.price.toLocaleString('fr-FR')} €</dd>
-              <dt>Statut</dt><dd>${l.status}</dd>
-              <dt>Vues</dt><dd>${l.views}</dd>
-              <dt>Publié</dt><dd><time datetime="${l.created_at}">${fmt(l.created_at)}</time></dd>
-            </dl>
-            <div>
-              <a href="/publier?id=${l.id}">Modifier</a>
-              ${l.status === 'actif' ? `<button onclick="markSold('${l.id}', this)">Marquer comme vendu</button>` : ''}
-              <button onclick="deleteListing('${l.id}', this)">Supprimer</button>
-            </div>
-          </article>
-        </li>
+            <small>${l.status} · ${l.views} vue${l.views > 1 ? 's' : ''}</small>
+          </header>
+          <dl>
+            <dt>Prix</dt><dd>${l.price.toLocaleString('fr-FR')} €</dd>
+            <dt>Publié</dt><dd><time datetime="${l.created_at}">${fmt(l.created_at)}</time></dd>
+          </dl>
+          <footer>
+            <a href="/publier?id=${l.id}" role="button" class="outline secondary">Modifier</a>
+            ${l.status === 'actif' ? `<button onclick="markSold('${l.id}', this)">Vendu</button>` : ''}
+            <button class="outline secondary" onclick="deleteListing('${l.id}', this)">Supprimer</button>
+          </footer>
+        </article>
       `).join('')
     }
 
@@ -110,7 +109,8 @@
       const { sb } = await window._authReady
       btn.disabled = true
       await sb.from('listings').update({ status: 'vendu' }).eq('id', id)
-      btn.closest('article').querySelector('dd:nth-of-type(2)').textContent = 'vendu'
+      const card = btn.closest('article')
+      card.querySelector('small').textContent = 'vendu · ' + card.querySelector('small').textContent.split('·')[1]?.trim()
       btn.remove()
     }
 
@@ -119,7 +119,7 @@
       const { sb } = await window._authReady
       btn.disabled = true
       await sb.from('listings').delete().eq('id', id)
-      btn.closest('li').remove()
+      btn.closest('article').remove()
     }
 
     // ── Recherches ────────────────────────────────────────────────────
@@ -131,28 +131,26 @@
         .eq('user_id', session.user.id)
         .order('created_at', { ascending: false })
 
-      const ul = document.getElementById('mes-recherches')
+      const grid = document.getElementById('mes-recherches')
       if (error || !data?.length) {
-        ul.innerHTML = '<li>Aucune recherche sauvegardée.</li>'
+        grid.innerHTML = '<p>Aucune recherche sauvegardée.</p>'
         return
       }
 
-      ul.innerHTML = data.map(s => `
-        <li>
-          <article>
+      grid.innerHTML = data.map(s => `
+        <article>
+          <header>
             <h3>${s.label || '(sans titre)'}</h3>
-            <dl>
-              <dt>Alertes</dt>
-              <dd><button onclick="toggleAlerts('${s.id}', ${s.alerts_enabled}, this)">
-                ${s.alerts_enabled ? 'Désactiver les alertes' : 'Activer les alertes'}
-              </button></dd>
-            </dl>
-            <div>
-              <a href="/search?${searchParams(s)}">Relancer la recherche</a>
-              <button onclick="deleteSearch('${s.id}', this)">Supprimer</button>
-            </div>
-          </article>
-        </li>
+            <small>Alertes : ${s.alerts_enabled ? 'activées' : 'désactivées'}</small>
+          </header>
+          <footer>
+            <a href="/search?${searchParams(s)}" role="button" class="outline">Relancer</a>
+            <button class="outline secondary" onclick="toggleAlerts('${s.id}', ${s.alerts_enabled}, this)">
+              ${s.alerts_enabled ? 'Désactiver alertes' : 'Activer alertes'}
+            </button>
+            <button class="outline secondary" onclick="deleteSearch('${s.id}', this)">Supprimer</button>
+          </footer>
+        </article>
       `).join('')
     }
 
@@ -171,7 +169,7 @@
       const { sb } = await window._authReady
       btn.disabled = true
       await sb.from('saved_searches').delete().eq('id', id)
-      btn.closest('li').remove()
+      btn.closest('article').remove()
     }
 
     function searchParams(s) {
