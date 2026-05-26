@@ -10,7 +10,9 @@
 
   <header class="container">
     <nav>
-      <a href="/"><strong>listing</strong></a>
+      <ul>
+        <li><a href="/"><strong>listing</strong></a></li>
+      </ul>
       <ul>
         <li><a href="/search">Rechercher</a></li>
         <li data-nav-auth><a href="/connexion">Se connecter</a></li>
@@ -107,14 +109,16 @@
         <!-- Formulaire de contact (masqué par défaut) -->
         <form id="contact-form" action="/api/contact" method="post" hidden>
           <div>
-            <label for="message">Votre message</label><br>
-            <textarea id="message" name="message" rows="5" required
-                      placeholder="Bonjour, je suis intéressé par ce bien..."></textarea>
+            <label for="message">
+              Votre message
+              <textarea id="message" name="message" rows="5" required
+                        placeholder="Bonjour, je suis intéressé par ce bien..."></textarea>
+            </label>
           </div>
           <input type="hidden" name="listing_id" value="abc123">
           <div>
             <button type="submit">Envoyer ma demande</button>
-            <button type="button" id="btn-cancel">Annuler</button>
+            <button type="button" id="btn-cancel" class="secondary">Annuler</button>
           </div>
         </form>
 

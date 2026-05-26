@@ -10,7 +10,9 @@
 
   <header class="container">
     <nav>
-      <a href="/"><strong>listing</strong></a>
+      <ul>
+        <li><a href="/"><strong>listing</strong></a></li>
+      </ul>
     </nav>
   </header>
 
@@ -22,10 +24,11 @@
       <p>Saisissez votre email. Vous recevrez un lien de connexion. Pas de mot de passe.</p>
       <form id="form-email" action="/api/auth/magic-link" method="post">
         <div>
-          <label for="email">Adresse email</label><br>
-          <input type="email" id="email" name="email" required autofocus
-                 placeholder="vous@exemple.fr"
-                 autocomplete="email">
+          <label for="email">Adresse email
+            <input type="email" id="email" name="email" required autofocus
+                   placeholder="vous@exemple.fr"
+                   autocomplete="email">
+          </label>
         </div>
         <p id="error-msg" hidden style="color:red"></p>
         <div>
@@ -41,7 +44,7 @@
       <p><small>Lien valable 15 minutes. Vérifiez vos spams.</small></p>
       <div>
         <button type="button" id="btn-resend">Renvoyer le lien</button>
-        <button type="button" id="btn-back">Utiliser une autre adresse</button>
+        <button type="button" id="btn-back" class="secondary">Utiliser une autre adresse</button>
       </div>
     </div>
 
@@ -65,37 +68,18 @@
     const errorMsg  = document.getElementById('error-msg')
 
     async function sendMagicLink(email) {
-      console.log('[1] sendMagicLink appelé avec :', email)
-
-      console.log('[2] attente de _authReady...')
       const { sb } = await window._authReady
-      console.log('[3] _authReady résolu, client Supabase :', sb)
-
       const redirectTo = `${window.location.origin}/api/auth/callback`
-      console.log('[4] redirectTo :', redirectTo)
-
-      console.log('[5] appel sb.auth.signInWithOtp...')
-      const { data, error } = await sb.auth.signInWithOtp({
+      const { error } = await sb.auth.signInWithOtp({
         email,
         options: { emailRedirectTo: redirectTo },
       })
-      console.log('[6] réponse Supabase — data :', data, '| error :', error)
-
       if (error) throw new Error(error.message)
-      console.log('[7] succès !')
     }
-
-    // Log au chargement de la page
-    window._authReady.then(({ sb }) => {
-      console.log('[init] _authReady OK, supabaseUrl :', sb.supabaseUrl ?? sb.storageKey ?? '(voir objet)')
-    }).catch(err => {
-      console.error('[init] _authReady ÉCHEC :', err)
-    })
 
     formEmail.addEventListener('submit', async e => {
       e.preventDefault()
       const email = document.getElementById('email').value
-      console.log('[submit] email saisi :', email)
       errorMsg.hidden = true
       btnSubmit.disabled = true
       btnSubmit.textContent = 'Envoi en cours…'
@@ -105,7 +89,6 @@
         stepEmail.hidden = true
         stepSent.hidden  = false
       } catch (err) {
-        console.error('[submit] erreur :', err)
         errorMsg.textContent = err.message
         errorMsg.hidden = false
       } finally {
