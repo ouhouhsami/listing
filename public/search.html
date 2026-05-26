@@ -215,9 +215,51 @@
     })
 
     // ── Sauvegarder la recherche ──
-    document.getElementById('btn-save-search').addEventListener('click', () => {
-      window.location.href = '/connexion?next=/search&save=1'
+    document.getElementById('btn-save-search').addEventListener('click', async () => {
+      const { sb, session } = await window._authReady
+      if (!session) {
+        window.location.href = `/connexion?next=${encodeURIComponent(window.location.pathname + window.location.search)}&save=1`
+        return
+      }
+
+      const p = new URLSearchParams(window.location.search)
+      const body = { property_type: p.get('type') || 'appartement' }
+      if (p.get('price_max'))    body.price_max    = parseInt(p.get('price_max'))
+      if (p.get('surface_min'))  body.surface_min  = parseFloat(p.get('surface_min'))
+      if (p.get('rooms_min'))    body.rooms_min    = parseInt(p.get('rooms_min'))
+      if (p.get('bedrooms_min')) body.bedrooms_min = parseInt(p.get('bedrooms_min'))
+      if (p.get('has_balcony')  === 'true') body.has_balcony  = true
+      if (p.get('has_parking')  === 'true') body.has_parking  = true
+      if (p.get('has_elevator') === 'true') body.has_elevator = true
+      if (p.get('has_garden')   === 'true') body.has_garden   = true
+      if (p.get('zone')) body.zone = JSON.parse(p.get('zone'))
+
+      const label = generateLabel(body)
+      const { error } = await sb.from('saved_searches').insert({
+        ...body, user_id: session.user.id, label, alerts_enabled: true
+      })
+
+      const btn = document.getElementById('btn-save-search')
+      if (error) {
+        btn.textContent = 'Erreur lors de la sauvegarde'
+      } else {
+        btn.textContent = 'Recherche sauvegardée ✓'
+        btn.disabled = true
+      }
     })
+
+    function generateLabel(s) {
+      const parts = []
+      if (s.property_type) parts.push(s.property_type === 'appartement' ? 'Appart' : 'Maison')
+      if (s.price_max)     parts.push(`max ${Math.round(s.price_max / 1000)}k€`)
+      if (s.rooms_min)     parts.push(`${s.rooms_min}p+`)
+      if (s.surface_min)   parts.push(`${s.surface_min}m²+`)
+      if (s.has_balcony)   parts.push('Balcon')
+      if (s.has_parking)   parts.push('Parking')
+      if (s.has_elevator)  parts.push('Ascenseur')
+      if (s.has_garden)    parts.push('Jardin')
+      return parts.join(' · ')
+    }
 
     // ── Restauration des champs depuis les params URL ──
     const params = new URLSearchParams(window.location.search)
