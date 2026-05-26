@@ -44,26 +44,6 @@
       </fieldset>
 
       <fieldset>
-        <legend>Prix</legend>
-        <label for="price_max">
-          Prix maximum (€)
-          <input type="number" id="price_max" name="price_max"
-                 min="0" step="1000" placeholder="400000"
-                 value="400000">
-        </label>
-      </fieldset>
-
-      <fieldset>
-        <legend>Surface</legend>
-        <label for="surface_min">
-          Surface minimum (m²)
-          <input type="number" id="surface_min" name="surface_min"
-                 min="0" step="5" placeholder="50"
-                 value="50">
-        </label>
-      </fieldset>
-
-      <fieldset>
         <legend>Pièces</legend>
         <div class="grid">
           <label for="rooms_min">
@@ -237,8 +217,6 @@
 
       const p = new URLSearchParams(window.location.search)
       const body = { property_type: p.get('type') || 'appartement' }
-      if (p.get('price_max'))    body.price_max    = parseInt(p.get('price_max'))
-      if (p.get('surface_min'))  body.surface_min  = parseFloat(p.get('surface_min'))
       if (p.get('rooms_min'))    body.rooms_min    = parseInt(p.get('rooms_min'))
       if (p.get('bedrooms_min')) body.bedrooms_min = parseInt(p.get('bedrooms_min'))
       if (p.get('has_balcony')  === 'true') body.has_balcony  = true
@@ -264,9 +242,7 @@
     function generateLabel(s) {
       const parts = []
       if (s.property_type) parts.push(s.property_type === 'appartement' ? 'Appart' : 'Maison')
-      if (s.price_max)     parts.push(`max ${Math.round(s.price_max / 1000)}k€`)
       if (s.rooms_min)     parts.push(`${s.rooms_min}p+`)
-      if (s.surface_min)   parts.push(`${s.surface_min}m²+`)
       if (s.has_balcony)   parts.push('Balcon')
       if (s.has_parking)   parts.push('Parking')
       if (s.has_elevator)  parts.push('Ascenseur')
@@ -293,7 +269,7 @@
       }
 
       // Champs numériques et selects
-      ;['price_max', 'surface_min', 'rooms_min', 'bedrooms_min'].forEach(name => {
+      ;['rooms_min', 'bedrooms_min'].forEach(name => {
         const val = params.get(name)
         const el  = document.getElementById(name)
         if (val && el) el.value = val
@@ -359,6 +335,7 @@
           </header>
           <h3><a href="/listings/${l.id}">${l.title}</a></h3>
           <dl>
+            <dt>Surface</dt><dd>${l.surface} m²</dd>
             <dt>Pièces</dt><dd>${l.rooms}</dd>
             <dt>DPE</dt><dd>${l.dpe}</dd>
           </dl>
