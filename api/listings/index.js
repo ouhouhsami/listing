@@ -46,7 +46,7 @@ export default async function handler(req, res) {
     const title = `${type} ${body.rooms} pièces · ${body.surface} m² · ${geo.city}`
 
     const { data, error } = await supabase.from('listings').insert({
-      ...body,
+      ...sanitize(body),
       user_id:     user.id,
       title,
       city:        geo.city,
@@ -71,6 +71,17 @@ async function getUser(req) {
   if (!token) return { user: null }
   const { data } = await supabase.auth.getUser(token)
   return { user: data.user }
+}
+
+function sanitize(body) {
+  const int   = ['price', 'rooms', 'bedrooms', 'bathrooms', 'floor', 'total_floors', 'year_built']
+  const float = ['surface', 'land_surface']
+  const bool  = ['has_balcony', 'has_cave', 'has_elevator', 'has_garden']
+  const out   = { ...body }
+  for (const k of int)   out[k] = out[k] !== '' && out[k] != null ? parseInt(out[k])   : null
+  for (const k of float) out[k] = out[k] !== '' && out[k] != null ? parseFloat(out[k]) : null
+  for (const k of bool)  out[k] = out[k] === 'true' || out[k] === true
+  return out
 }
 
 async function geocode(address) {
