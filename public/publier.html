@@ -131,81 +131,68 @@
       <!-- ── Énergie ── -->
       <fieldset>
         <legend>Diagnostic énergétique</legend>
-        <div class="grid">
-          <label for="dpe">
-            DPE — consommation énergétique
-            <select id="dpe" name="dpe" required>
-              <option value="">Choisir</option>
-              <option value="A">A</option>
-              <option value="B">B</option>
-              <option value="C">C</option>
-              <option value="D">D</option>
-              <option value="E">E</option>
-              <option value="F">F</option>
-              <option value="G">G</option>
-            </select>
-          </label>
-          <label for="ges">
-            GES — émissions de gaz à effet de serre
-            <select id="ges" name="ges" required>
-              <option value="">Choisir</option>
-              <option value="A">A</option>
-              <option value="B">B</option>
-              <option value="C">C</option>
-              <option value="D">D</option>
-              <option value="E">E</option>
-              <option value="F">F</option>
-              <option value="G">G</option>
-            </select>
-          </label>
-        </div>
-        <div class="grid">
-          <label for="heating_type">
-            Type de chauffage
-            <select id="heating_type" name="heating_type" required>
-              <option value="">Choisir</option>
-              <option value="gaz">Gaz</option>
-              <option value="electrique">Électrique</option>
-              <option value="fioul">Fioul</option>
-              <option value="pac">Pompe à chaleur</option>
-              <option value="poele">Poêle</option>
-              <option value="autre">Autre</option>
-            </select>
-          </label>
-          <div id="field-heating-mode">
-            <label for="heating_mode">
-              Collectif ou individuel
-              <select id="heating_mode" name="heating_mode">
-                <option value="">Choisir</option>
-                <option value="collectif">Collectif</option>
-                <option value="individuel">Individuel</option>
-              </select>
-            </label>
+
+        <fieldset>
+          <legend>DPE — consommation énergétique</legend>
+          <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:.25rem">
+            <label><input type="radio" name="dpe" value="A" required> A</label>
+            <label><input type="radio" name="dpe" value="B"> B</label>
+            <label><input type="radio" name="dpe" value="C"> C</label>
+            <label><input type="radio" name="dpe" value="D"> D</label>
+            <label><input type="radio" name="dpe" value="E"> E</label>
+            <label><input type="radio" name="dpe" value="F"> F</label>
+            <label><input type="radio" name="dpe" value="G"> G</label>
           </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>GES — émissions de gaz à effet de serre</legend>
+          <div style="display:flex;gap:1.5rem;flex-wrap:wrap;margin-top:.25rem">
+            <label><input type="radio" name="ges" value="A" required> A</label>
+            <label><input type="radio" name="ges" value="B"> B</label>
+            <label><input type="radio" name="ges" value="C"> C</label>
+            <label><input type="radio" name="ges" value="D"> D</label>
+            <label><input type="radio" name="ges" value="E"> E</label>
+            <label><input type="radio" name="ges" value="F"> F</label>
+            <label><input type="radio" name="ges" value="G"> G</label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Type de chauffage</legend>
+          <label><input type="radio" name="heating_type" value="gaz" required> Gaz</label>
+          <label><input type="radio" name="heating_type" value="electrique"> Électrique</label>
+          <label><input type="radio" name="heating_type" value="fioul"> Fioul</label>
+          <label><input type="radio" name="heating_type" value="pac"> Pompe à chaleur</label>
+          <label><input type="radio" name="heating_type" value="poele"> Poêle</label>
+          <label><input type="radio" name="heating_type" value="autre"> Autre</label>
+        </fieldset>
+
+        <div id="field-heating-mode">
+          <fieldset>
+            <legend>Collectif ou individuel</legend>
+            <label><input type="radio" name="heating_mode" value="collectif"> Collectif</label>
+            <label><input type="radio" name="heating_mode" value="individuel"> Individuel</label>
+          </fieldset>
         </div>
       </fieldset>
 
       <!-- ── Caractéristiques ── -->
       <fieldset>
         <legend>Caractéristiques</legend>
-        <div class="grid">
-          <label for="year_built">
-            Année de construction
-            <input type="number" id="year_built" name="year_built"
-                   min="1800" max="2026" placeholder="1987">
-          </label>
-          <label for="condition">
-            État général
-            <select id="condition" name="condition" required>
-              <option value="">Choisir</option>
-              <option value="neuf">Neuf</option>
-              <option value="tres_bon_etat">Très bon état</option>
-              <option value="bon_etat">Bon état</option>
-              <option value="a_rafraichir">À rafraîchir</option>
-              <option value="a_renover">À rénover</option>
-            </select>
-          </label>
-        </div>
+        <label for="year_built">
+          Année de construction
+          <input type="number" id="year_built" name="year_built"
+                 min="1800" max="2026" placeholder="1987">
+        </label>
+        <fieldset>
+          <legend>État général</legend>
+          <label><input type="radio" name="condition" value="neuf" required> Neuf</label>
+          <label><input type="radio" name="condition" value="tres_bon_etat"> Très bon état</label>
+          <label><input type="radio" name="condition" value="bon_etat"> Bon état</label>
+          <label><input type="radio" name="condition" value="a_rafraichir"> À rafraîchir</label>
+          <label><input type="radio" name="condition" value="a_renover"> À rénover</label>
+        </fieldset>
       </fieldset>
 
       <!-- ── Équipements ── -->
@@ -224,15 +211,13 @@
           </label>
         </div>
         <div id="field-parking">
-          <label for="parking">
-            Parking / Garage
-            <select id="parking" name="parking">
-              <option value="aucun">Aucun</option>
-              <option value="box_ferme">Box fermé</option>
-              <option value="couvert">Couvert</option>
-              <option value="exterieur">Extérieur</option>
-            </select>
-          </label>
+          <fieldset>
+            <legend>Parking / Garage</legend>
+            <label><input type="radio" name="parking" value="aucun" checked> Aucun</label>
+            <label><input type="radio" name="parking" value="box_ferme"> Box fermé</label>
+            <label><input type="radio" name="parking" value="couvert"> Couvert</label>
+            <label><input type="radio" name="parking" value="exterieur"> Extérieur</label>
+          </fieldset>
         </div>
         <div id="field-elevator">
           <label>
