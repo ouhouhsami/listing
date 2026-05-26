@@ -64,17 +64,37 @@
     const errorMsg  = document.getElementById('error-msg')
 
     async function sendMagicLink(email) {
+      console.log('[1] sendMagicLink appelé avec :', email)
+
+      console.log('[2] attente de _authReady...')
       const { sb } = await window._authReady
-      const { error } = await sb.auth.signInWithOtp({
+      console.log('[3] _authReady résolu, client Supabase :', sb)
+
+      const redirectTo = `${window.location.origin}/api/auth/callback`
+      console.log('[4] redirectTo :', redirectTo)
+
+      console.log('[5] appel sb.auth.signInWithOtp...')
+      const { data, error } = await sb.auth.signInWithOtp({
         email,
-        options: { emailRedirectTo: `${window.location.origin}/api/auth/callback` },
+        options: { emailRedirectTo: redirectTo },
       })
+      console.log('[6] réponse Supabase — data :', data, '| error :', error)
+
       if (error) throw new Error(error.message)
+      console.log('[7] succès !')
     }
+
+    // Log au chargement de la page
+    window._authReady.then(({ sb }) => {
+      console.log('[init] _authReady OK, supabaseUrl :', sb.supabaseUrl ?? sb.storageKey ?? '(voir objet)')
+    }).catch(err => {
+      console.error('[init] _authReady ÉCHEC :', err)
+    })
 
     formEmail.addEventListener('submit', async e => {
       e.preventDefault()
       const email = document.getElementById('email').value
+      console.log('[submit] email saisi :', email)
       errorMsg.hidden = true
       btnSubmit.disabled = true
       btnSubmit.textContent = 'Envoi en cours…'
@@ -84,6 +104,7 @@
         stepEmail.hidden = true
         stepSent.hidden  = false
       } catch (err) {
+        console.error('[submit] erreur :', err)
         errorMsg.textContent = err.message
         errorMsg.hidden = false
       } finally {
