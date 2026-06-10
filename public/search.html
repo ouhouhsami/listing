@@ -155,7 +155,6 @@
     <p>listing &copy; 2026</p>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/auth.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -223,8 +222,8 @@
 
     // ── Sauvegarder la recherche ──
     document.getElementById('btn-save-search').addEventListener('click', async () => {
-      const { sb, session } = await window._authReady
-      if (!session) {
+      const { user } = await window._authReady
+      if (!user) {
         window.location.href = `/connexion?next=${encodeURIComponent(window.location.pathname + window.location.search)}&save=1`
         return
       }
@@ -241,32 +240,20 @@
       if (p.get('has_garden')   === 'true') body.has_garden   = true
       if (p.get('zone')) body.zone = JSON.parse(p.get('zone'))
 
-      const label = generateLabel(body)
-      const { error } = await sb.from('saved_searches').insert({
-        ...body, user_id: session.user.id, label, alerts_enabled: true
+      const res = await fetch('/api/searches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
       })
 
       const btn = document.getElementById('btn-save-search')
-      if (error) {
+      if (!res.ok) {
         btn.textContent = 'Erreur lors de la sauvegarde'
       } else {
         btn.textContent = 'Recherche sauvegardée ✓'
         btn.disabled = true
       }
     })
-
-    function generateLabel(s) {
-      const parts = []
-      if (s.property_type) parts.push(s.property_type === 'appartement' ? 'Appart' : 'Maison')
-      if (s.price_max)     parts.push(`max ${Math.round(s.price_max / 1000)}k€`)
-      if (s.rooms_min)     parts.push(`${s.rooms_min}p+`)
-      if (s.surface_min)   parts.push(`${s.surface_min}m²+`)
-      if (s.has_balcony)   parts.push('Balcon')
-      if (s.has_parking)   parts.push('Parking')
-      if (s.has_elevator)  parts.push('Ascenseur')
-      if (s.has_garden)    parts.push('Jardin')
-      return parts.join(' · ')
-    }
 
     // ── Restauration des champs depuis les params URL ──
     const params = new URLSearchParams(window.location.search)

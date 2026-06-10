@@ -1,12 +1,20 @@
 -- ── Extensions ──────────────────────────────────────────────────────
 create extension if not exists postgis;
+create extension if not exists pgcrypto;  -- gen_random_uuid sur vieux Postgres
+
+-- ── users ─────────────────────────────────────────────────────────────
+create table users (
+  id              uuid default gen_random_uuid() primary key,
+  email           text unique not null,
+  created_at      timestamptz default now()
+);
 
 -- ── listings ─────────────────────────────────────────────────────────
 create table listings (
   id              uuid default gen_random_uuid() primary key,
   created_at      timestamptz default now(),
   updated_at      timestamptz default now(),
-  user_id         uuid references auth.users(id) on delete cascade,
+  user_id         uuid references users(id) on delete cascade,
   status          text default 'actif' check (status in ('actif','vendu','suspendu','expire')),
   property_type   text not null check (property_type in ('appartement','maison')),
   title           text,
@@ -41,13 +49,15 @@ create table listings (
   views           integer default 0
 );
 
-create index listings_geom_idx on listings using gist(geom);
+create index listings_geom_idx   on listings using gist(geom);
+create index listings_status_idx on listings(status);
+create index listings_user_idx   on listings(user_id);
 
 -- ── saved_searches ───────────────────────────────────────────────────
 create table saved_searches (
   id              uuid default gen_random_uuid() primary key,
   created_at      timestamptz default now(),
-  user_id         uuid references auth.users(id) on delete cascade,
+  user_id         uuid references users(id) on delete cascade,
   property_type   text not null,
   zone            jsonb,
   price_max       integer,
@@ -62,72 +72,14 @@ create table saved_searches (
   label           text
 );
 
+create index saved_searches_user_idx on saved_searches(user_id);
+
 -- ── contact_requests ─────────────────────────────────────────────────
 create table contact_requests (
   id              uuid default gen_random_uuid() primary key,
   created_at      timestamptz default now(),
   listing_id      uuid references listings(id) on delete cascade,
-  buyer_id        uuid references auth.users(id) on delete cascade,
+  buyer_id        uuid references users(id) on delete cascade,
   buyer_email     text not null,
   message         text not null
 );
-
--- ── RLS ──────────────────────────────────────────────────────────────
-alter table listings enable row level security;
-create policy "lecture publique" on listings for select using (status = 'actif');
-create policy "vendeur gère ses annonces" on listings for all using (auth.uid() = user_id);
-
-alter table saved_searches enable row level security;
-create policy "utilisateur gère ses recherches" on saved_searches for all using (auth.uid() = user_id);
-
-alter table contact_requests enable row level security;
-create policy "acheteur crée une demande" on contact_requests for insert with check (auth.uid() = buyer_id);
-
--- ── Fonction de recherche unifiée avec filtre spatial optionnel ───────
-create or replace function search_listings(
-  p_zone         jsonb    default null,
-  p_type         text     default null,
-  p_price_max    integer  default null,
-  p_surface_min  float    default null,
-  p_rooms_min    integer  default null,
-  p_bedrooms_min integer  default null,
-  p_has_balcony  boolean  default null,
-  p_has_parking  boolean  default null,
-  p_has_elevator boolean  default null,
-  p_has_garden   boolean  default null,
-  p_limit        integer  default 50
-)
-returns table (
-  id            uuid,
-  title         text,
-  property_type text,
-  price         integer,
-  surface       float,
-  rooms         integer,
-  bedrooms      integer,
-  dpe           text,
-  city          text,
-  created_at    timestamptz
-)
-language sql stable security invoker
-as $$
-  select id, title, property_type, price, surface, rooms,
-         bedrooms, dpe, city, created_at
-  from listings
-  where status = 'actif'
-    and (p_type         is null or property_type = p_type)
-    and (p_price_max    is null or price        <= p_price_max)
-    and (p_surface_min  is null or surface      >= p_surface_min)
-    and (p_rooms_min    is null or rooms        >= p_rooms_min)
-    and (p_bedrooms_min is null or bedrooms     >= p_bedrooms_min)
-    and (p_has_balcony  is null or has_balcony  = p_has_balcony)
-    and (p_has_parking  is null or not p_has_parking or parking != 'aucun')
-    and (p_has_elevator is null or has_elevator = p_has_elevator)
-    and (p_has_garden   is null or has_garden   = p_has_garden)
-    and (p_zone is null or ST_Within(
-          geom,
-          ST_SetSRID(ST_GeomFromGeoJSON(p_zone::text), 4326)
-        ))
-  order by created_at desc
-  limit least(p_limit, 50);
-$$;

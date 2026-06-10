@@ -51,37 +51,32 @@
     <p>listing &copy; 2026</p>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/auth.js"></script>
   <script>
-    window._authReady.then(({ sb, session }) => {
-      if (!session) { window.location.href = '/connexion?next=/profil'; return }
+    window._authReady.then(({ user }) => {
+      if (!user) { window.location.href = '/connexion?next=/profil'; return }
 
-      document.getElementById('user-email').textContent = session.user.email
-      const since = new Date(session.user.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+      document.getElementById('user-email').textContent = user.email
+      const since = new Date(user.created_at).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
       document.getElementById('user-since').textContent = `Membre depuis ${since}`
 
-      loadListings(sb, session)
-      loadSearches(sb, session)
+      loadListings()
+      loadSearches()
     })
 
     document.getElementById('btn-logout').addEventListener('click', async () => {
-      const { sb } = await window._authReady
-      await sb.auth.signOut()
+      await fetch('/api/auth/logout', { method: 'POST' })
       window.location.href = '/'
     })
 
     // ── Annonces ──────────────────────────────────────────────────────
 
-    async function loadListings(sb, session) {
-      const { data, error } = await sb
-        .from('listings')
-        .select('id, title, price, status, views, created_at')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false })
+    async function loadListings() {
+      const res  = await fetch('/api/listings/me')
+      const data = res.ok ? await res.json() : []
 
       const grid = document.getElementById('mes-annonces')
-      if (error || !data?.length) {
+      if (!data.length) {
         grid.innerHTML = '<p>Aucune annonce.</p>'
         return
       }
@@ -106,9 +101,12 @@
     }
 
     async function markSold(id, btn) {
-      const { sb } = await window._authReady
       btn.disabled = true
-      await sb.from('listings').update({ status: 'vendu' }).eq('id', id)
+      await fetch(`/api/listings/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'vendu' }),
+      })
       const card = btn.closest('article')
       card.querySelector('small').textContent = 'vendu · ' + card.querySelector('small').textContent.split('·')[1]?.trim()
       btn.remove()
@@ -116,23 +114,19 @@
 
     async function deleteListing(id, btn) {
       if (!confirm('Supprimer cette annonce ?')) return
-      const { sb } = await window._authReady
       btn.disabled = true
-      await sb.from('listings').delete().eq('id', id)
+      await fetch(`/api/listings/${id}`, { method: 'DELETE' })
       btn.closest('article').remove()
     }
 
     // ── Recherches ────────────────────────────────────────────────────
 
-    async function loadSearches(sb, session) {
-      const { data, error } = await sb
-        .from('saved_searches')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false })
+    async function loadSearches() {
+      const res  = await fetch('/api/searches')
+      const data = res.ok ? await res.json() : []
 
       const grid = document.getElementById('mes-recherches')
-      if (error || !data?.length) {
+      if (!data.length) {
         grid.innerHTML = '<p>Aucune recherche sauvegardée.</p>'
         return
       }
@@ -155,10 +149,13 @@
     }
 
     async function toggleAlerts(id, current, btn) {
-      const { sb } = await window._authReady
       btn.disabled = true
       const next = !current
-      await sb.from('saved_searches').update({ alerts_enabled: next }).eq('id', id)
+      await fetch(`/api/searches/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alerts_enabled: next }),
+      })
       btn.textContent = next ? 'Désactiver les alertes' : 'Activer les alertes'
       btn.onclick = () => toggleAlerts(id, next, btn)
       btn.disabled = false
@@ -166,9 +163,8 @@
 
     async function deleteSearch(id, btn) {
       if (!confirm('Supprimer cette recherche ?')) return
-      const { sb } = await window._authReady
       btn.disabled = true
-      await sb.from('saved_searches').delete().eq('id', id)
+      await fetch(`/api/searches/${id}`, { method: 'DELETE' })
       btn.closest('article').remove()
     }
 

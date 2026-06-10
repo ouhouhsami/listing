@@ -268,7 +268,6 @@
     <p>listing &copy; 2026</p>
   </footer>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/js/auth.js"></script>
   <script>
     // ── Autocomplete adresse (api-adresse.data.gouv.fr) ──────────────
@@ -423,15 +422,15 @@
     updateFields()
 
     // Auth : redirect si non connecté
-    window._authReady.then(({ session }) => {
-      if (!session) window.location.href = '/connexion?next=/publier'
+    window._authReady.then(({ user }) => {
+      if (!user) window.location.href = '/connexion?next=/publier'
     })
 
-    // Soumission avec Bearer token
+    // Soumission (le cookie de session authentifie la requête)
     document.querySelector('form').addEventListener('submit', async e => {
       e.preventDefault()
-      const { session } = await window._authReady
-      if (!session) return
+      const { user } = await window._authReady
+      if (!user) return
 
       const formData = new FormData(e.target)
       const body = {}
@@ -446,10 +445,7 @@
 
       const res = await fetch('/api/listings', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`,
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
 
